@@ -1,0 +1,7 @@
+{
+	"files.associations": {
+		"miniaudio.h": "c",
+		"term_player.h": "c",
+		"dirent.h": "c"
+	}
+}

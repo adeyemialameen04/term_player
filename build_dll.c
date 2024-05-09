@@ -1,17 +1,17 @@
+#include <stdio.h>
 #include "term_player.h"
 
-void build_dll(music_file_t **head, char *filename)
+void build_dll(music_table_t *ht)
 {
-	char *line;
+	char *line = NULL;
 	size_t size = 0;
 	ssize_t chars_read;
 	FILE *fd;
 
-	if (*filename == '\0')
+	if (*ht->musics_file == '\0')
 		exit(EXIT_FAILURE);
-		
 
-	fd = fopen(filename, "r");
+	fd = fopen(ht->musics_file, "r");
 	if (fd == NULL)
 	{
 		fprintf(stderr, "Unable to open file for building\n");
@@ -20,7 +20,11 @@ void build_dll(music_file_t **head, char *filename)
 
 	while ((chars_read = getline(&line, &size, fd)) != -1)
 	{
-		add_at_end(head, line);
+		char *str = line;
+		int len = strcspn(str, "\n");
+
+		str[len] = '\0';
+		insert(ht, str);
 	}
 
 	free(line);
