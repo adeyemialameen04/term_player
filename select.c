@@ -1,91 +1,83 @@
 #include "term_player.h"
-#include <ncurses.h>
-#include "audio.h"
+#include <stdio.h>
+#include <termios.h>
 
-static void print_options(music_table_t *ht, int curr_opt)
-{
-    int i, j = 1;
-    music_file_t *tmp;
+static void enableRawMode() {
+    struct termios term;
+    tcgetattr(fileno(stdin), &term);
+    term.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(fileno(stdin), TCSANOW, &term);
+}
 
-    for (i = 0; i < (int)ht->size; i++)
-    {
-        tmp = ht->array[i];
-        while (tmp != NULL)
-        {
-            if (i == curr_opt)
-            {
-                attron(A_REVERSE);
-                printw(" > (%d) %s\n", j, tmp->filename);
-                attroff(A_REVERSE);
+static void disableRawMode() {
+    struct termios term;
+    tcgetattr(fileno(stdin), &term);
+    term.c_lflag |= ICANON | ECHO;
+    tcsetattr(fileno(stdin), TCSANOW, &term);
+}
+
+
+void print_menu(music_table_t *ht, int selected_option) {
+    printf("Select a music file:\n");
+
+    // Print music file options
+    for (unsigned int i = 0; i < ht->size; i++) {
+        music_file_t *tmp = ht->array[i];
+        while (tmp != NULL) {
+            if (i == selected_option) {
+                if (tmp == ht->array[i]) {
+                    printf("> "); // Print ">" symbol only for the first file in the linked list
+                } else {
+                    printf("  "); // Print spaces for subsequent files in the same linked list
+                }
+            } else {
+                printf("  "); // Print spaces for non-selected options
             }
-            else
-            {
-                printw("   (%d) %s\n", j, tmp->filename);
-            }
+            printf("%s\n", tmp->filename);
             tmp = tmp->next;
-            j++;
         }
     }
 }
 
-void select_options(music_table_t *ht)
-{
-    initscr();
-    cbreak();
-    noecho();
-    keypad(stdscr, TRUE);
-    curs_set(0);
+int select_music_file(music_table_t *ht) {
+    enableRawMode();
+    int selected_option = 0;
 
-    int curr_opt = 0;
-    int ch;
-    playback_t ctx = {0};
-
-    while ((ch = getch()) != 'q')
+    while (1)
     {
-        switch (ch)
-        {
-        case KEY_UP:
-            curr_opt = (curr_opt == 0) ? 0 : curr_opt - 1;
+        printf("\033[2J\033[H");
+        print_menu(ht, selected_option);
+        char ch = getchar();
+
+        if (ch == 'q')
             break;
-        case KEY_DOWN:
-            curr_opt++;
-            break;
-        case '\n':
+
+        if (ch == '\033')
         {
-            clear();
-            int i, index = 0;
-            music_file_t *selected = NULL;
-            for (i = 0; i < (int)ht->size; i++)
+            getchar();
+
+            switch (getchar())
             {
-                music_file_t *tmp = ht->array[i];
-                while (tmp != NULL)
-                {
-                    if (index == curr_opt)
-                    {
-                        selected = tmp;
-                        break;
-                    }
-                    index++;
-                    tmp = tmp->next;
-                }
-                if (selected != NULL)
+                case 'A':
+                    selected_option = (selected_option == 0) ? ht->size - 1 : selected_option - 1;
+                    break;
+                case 'B':
+                    selected_option = (selected_option == ht->size - 1) ? 0 : selected_option + 1;
                     break;
             }
-            if (selected != NULL)
-            {
-                printw("Currently Playing: %s\n", selected->filename);
-                play(selected->filename, &ctx);
-            }
-            break;
         }
-        default:
-            break;
-        }
+        else if (ch == '\n')
+        {
+            music_file_t *curr = ht->array[selected_option];
 
-        clear();
-        print_options(ht, curr_opt);
-        refresh();
+            if (curr != NULL)
+                printf("Selected is %s\n", curr->filename);
+            else
+                printf("Its a prank lol\n");
+            break;
+        }
     }
 
-    endwin();
+    disableRawMode();
+    return -1;
 }

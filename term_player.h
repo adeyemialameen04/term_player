@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-
+#include "ncurses.h"
+#define COLOR_NORMAL  PAIR(1)
+#define COLOR_SELECTED PAIR(2)
 typedef struct music_file
 {
   char *filename; /* KEY */
@@ -31,7 +33,7 @@ int get_music_files(char *filename, char *path);
 unsigned long int hash_djb2(const unsigned char *str);
 unsigned long int key_index(const unsigned char *key, unsigned long int size);
 void free_ht(music_table_t *ht);
-void select_options(music_table_t *ht);
+int select_music_file(music_table_t *ht);
 music_file_t *hash_table_get(music_table_t *ht, char *key);
 
 #endif /* _TERM_PLAYER_H_ */

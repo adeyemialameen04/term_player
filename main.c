@@ -51,8 +51,19 @@ int main(void)
 		printf("CURR->NEXT IS %s\n", curr->next->filename);
 	else
 		printf("Curr->NEXT is also NULL lol\n");
+	
+	if (curr->next->next != NULL)
+		printf("Wow wth is now wrong %s\n", curr->next->next->filename);
+	else
+		printf("I got too happy lol\n");
+    /* int selected_index = select_music_file(ht);
 
-	select_options(ht);
+	// Check if a music file was selected
+	if (selected_index >= 0)
+		printf("Selected file: %s\n", ht->array[selected_index]->filename);
+	else
+		printf("No file selected\n");
+	*/
 
 	free_ht(ht);
 	return (1);

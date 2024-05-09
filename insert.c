@@ -77,11 +77,15 @@ int insert(music_table_t *ht, char *filename)
 	}
 
 	idx = key_index((const unsigned char *)filename, ht->size);
+	printf("Idx for everyone is (%ld)\n", idx);
 	curr = ht->array[idx];
 	while (curr != NULL)
 	{
 		if (strcmp(curr->filename, filename) == 0)
+		{
+			printf("Any duplicates?\n");
 			return (1);
+		}
 		curr = curr->next;
 	}
 
