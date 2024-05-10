@@ -33,7 +33,7 @@ int get_music_files(char *filename, char *path);
 unsigned long int hash_djb2(const unsigned char *str);
 unsigned long int key_index(const unsigned char *key, unsigned long int size);
 void free_ht(music_table_t *ht);
-int select_music_file(music_table_t *ht);
 music_file_t *hash_table_get(music_table_t *ht, char *key);
+music_file_t *select_music_file(music_table_t *ht);
 
 #endif /* _TERM_PLAYER_H_ */
