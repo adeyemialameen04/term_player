@@ -33,10 +33,13 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uin
 static ma_uint64 g_PlaybackPosition = 0;
 
 // Modify the function signature to include a boolean flag for pausing
-int play(const char *filename, playback_t *ctx, music_table_t *ht)
+int play(char *filename, playback_t *ctx, music_table_t *ht)
 {
+    music_file_t *curr_file = hash_table_get(ht, filename);
     ma_device_config deviceConfig;
-    ma_result result = ma_decoder_init_file(filename, NULL, &ctx->decoder);
+    ma_result result;
+
+    result = ma_decoder_init_file(filename, NULL, &ctx->decoder);
     if (result != MA_SUCCESS)
     {
         return -2;
@@ -64,7 +67,7 @@ int play(const char *filename, playback_t *ctx, music_table_t *ht)
         return -4;
     }
 
-    printf("Press 's' to stop playback, 'm' to pause/resume...\n");
+    printf("Press 's' to stop playback, 'p' or spacebar to pause/resume...\n");
     ctx->is_playing = true;
     ctx->is_paused = false;
 
@@ -75,7 +78,7 @@ int play(const char *filename, playback_t *ctx, music_table_t *ht)
         {
             break;
         }
-        else if (ch == 'p') // Toggle pause/resume when 'm' key is pressed
+        else if (ch == 'p' || ch == ' ') // Toggle pause/resume when 'm' key is pressed
         {
             if (ctx->is_paused)
             {
@@ -96,5 +99,6 @@ int play(const char *filename, playback_t *ctx, music_table_t *ht)
 
     ma_device_uninit(&ctx->device);
     ma_decoder_uninit(&ctx->decoder);
+
     return 0;
 }

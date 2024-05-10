@@ -2,14 +2,12 @@
 
 music_file_t *hash_table_get(music_table_t *ht, char *key)
 {
-	unsigned int idx;
 	music_file_t *curr;
 
 	if (ht == NULL || *key == '\0')
 		return (NULL);
 
-	idx = key_index((const unsigned char *)key, ht->size);
-	curr = ht->array[idx];
+	curr = ht->head;
 
 	while (curr != NULL)
 	{
