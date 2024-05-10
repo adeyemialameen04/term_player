@@ -18,6 +18,8 @@ music_table_t *create_ht(unsigned int size)
 	ht->size = size;
 	ht->musics_file = "musics.txt";
 	ht->directory = NULL;
+	ht->tail = NULL;
+	ht->head = NULL;
 
 	return (ht);
 }

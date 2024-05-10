@@ -12,7 +12,8 @@ typedef struct music_file
 {
   char *filename; /* KEY */
   struct stat st;
-  struct music_file *prev;
+  struct music_file *sprev;
+  struct music_file *snext;
   struct music_file *next;
 } music_file_t;
 
@@ -22,6 +23,8 @@ typedef struct music_table
   char *musics_file;
   char *directory;
   music_file_t **array;
+  music_file_t *head;
+  music_file_t *tail;
 } music_table_t;
 
 music_table_t *create_ht(unsigned int size);

@@ -68,7 +68,7 @@ static music_file_t *create_node(char *filename, char *directory_path)
 int insert(music_table_t *ht, char *filename)
 {
 	unsigned long int idx;
-	music_file_t *curr, *new_node;
+	music_file_t *curr, *new_node, *prev;
 
 	if (ht == NULL || *filename == '\0')
 	{
@@ -83,6 +83,11 @@ int insert(music_table_t *ht, char *filename)
 	{
 		if (strcmp(curr->filename, filename) == 0)
 		{
+			if (stat(filename, &curr->st) != 0)
+			{
+				fprintf(stderr, "Unable to get stat file key\n");
+				return (0);
+			}
 			printf("Any duplicates?\n");
 			return (1);
 		}
@@ -95,9 +100,36 @@ int insert(music_table_t *ht, char *filename)
 		fprintf(stderr, "Error creating a newnode (create)\n");
 		exit(EXIT_FAILURE);
 	}
-
 	new_node->next = ht->array[idx];
 	ht->array[idx] = new_node;
+
+	curr = ht->head;
+	while (curr != NULL && strcmp(curr->filename, filename) < 0)
+	{
+		prev = curr;
+		curr = curr->snext;
+	}
+
+	if (prev == NULL)
+	{
+		new_node->snext = ht->head;
+		if (ht->head != NULL)
+			ht->head->sprev = new_node;
+
+		ht->head = new_node;
+	}
+	else
+	{
+		new_node->sprev = prev;
+		new_node->snext = prev->snext;
+		if (prev->snext != NULL)
+			prev->snext->sprev = new_node;
+
+		prev->snext = new_node;
+	}
+
+	if (new_node->snext == NULL)
+		ht->tail = new_node;
 
 	return (1);
 }

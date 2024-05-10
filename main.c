@@ -4,6 +4,37 @@
 #include <string.h>
 #include <stdlib.h>
 
+void clearscreen(void)
+{
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
+char *join_path(char *dir, char *filename, music_table_t *ht)
+{
+    char *fullpath;
+
+    if (*dir != '\0')
+    {
+        fullpath = malloc(strlen(dir) + strlen(filename) + 2);
+        if (fullpath == NULL)
+        {
+            fprintf(stderr, "Unable to allocate memory for fullpath\n");
+            free_ht(ht);
+            free(dir);
+            return (NULL);
+        }
+        sprintf(fullpath, "%s/%s", dir, filename);
+    }
+    else
+        fullpath = strdup(filename);
+
+    return (fullpath);
+}
+
 int main(void)
 {
     music_table_t *ht;
@@ -46,26 +77,14 @@ int main(void)
     selected = select_music_file(ht);
     if (selected != NULL)
     {
-        if (path_ptr != NULL)
-        {
-            fullpath = malloc(strlen(path_ptr) + strlen(selected->filename) + 2); // Allocate enough memory for the full path
-            if (fullpath == NULL)
-            {
-                fprintf(stderr, "Unable to allocate memory for fullpath\n");
-                free_ht(ht);
-                free(path_ptr); // Free the dynamically allocated path_ptr
-                return 1;
-            }
-            sprintf(fullpath, "%s/%s", path_ptr, selected->filename);
-        }
-        else
-        {
-            fullpath = strdup(selected->filename);
-        }
+        fullpath = join_path(path_ptr, selected->filename, ht);
 
-        if (play(fullpath, &ctx) == 0)
-            printf("Playing: %s\n", fullpath);
-        else
+        clearscreen();
+        printf("Previous is %s\n", selected->sprev ? selected->sprev->filename : "Nothing lol");
+        printf("Currently Playing %s\n", selected->filename);
+        printf("Next is %s\n", selected->snext ? selected->snext->filename : "Nothing lol");
+        int ch;
+        if (play(fullpath, &ctx, ht) != 0)
             printf("Failed to play the selected file\n");
 
         free(fullpath);
@@ -81,3 +100,4 @@ int main(void)
 
     return 0;
 }
+
