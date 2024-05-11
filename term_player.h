@@ -27,6 +27,7 @@ typedef struct music_table
   music_file_t *tail;
 } music_table_t;
 
+char *join_path(char *dir, char *filename, music_table_t *ht);
 music_table_t *create_ht(unsigned int size);
 void print_dll(music_table_t *ht);
 void build_dll(music_table_t *ht);
@@ -38,5 +39,7 @@ unsigned long int key_index(const unsigned char *key, unsigned long int size);
 void free_ht(music_table_t *ht);
 music_file_t *hash_table_get(music_table_t *ht, char *key);
 music_file_t *select_music_file(music_table_t *ht);
+void clearscreen(void);
+void print_player(music_file_t *selected);
 
 #endif /* _TERM_PLAYER_H_ */

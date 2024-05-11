@@ -1,45 +1,69 @@
 #include "term_player.h"
 #include <stdbool.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 #define MINIAUDIO_IMPLEMENTATION
 #include <stdio.h>
 #include "audio.h"
+#include <termios.h>
+#include <sys/ioctl.h>
+
+bool is_finished = false;
+void clearInputBuffer()
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
 
 void stop_playback(playback_t *ctx)
 {
-        if (ctx->is_playing)
-        {
-                ma_device_stop(&ctx->device);
-                ma_device_uninit(&ctx->device);
-                ma_decoder_uninit(&ctx->decoder);
-                ctx->is_playing = false;
-        }
+    if (ctx->is_playing)
+    {
+            ma_device_stop(&ctx->device);
+            ma_device_uninit(&ctx->device);
+            ma_decoder_uninit(&ctx->decoder);
+            ctx->is_playing = false;
+    }
+}
+
+bool kbhit() 
+{ 
+    struct termios term; 
+    tcgetattr(0, &term); 
+ 
+    struct termios term2 = term; 
+    term2.c_lflag &= ~ICANON; 
+    tcsetattr(0, TCSANOW, &term2); 
+ 
+    int byteswaiting; 
+    ioctl(0, FIONREAD, &byteswaiting); 
+ 
+    tcsetattr(0, TCSANOW, &term); 
+ 
+    return byteswaiting > 0; 
 }
 
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount)
 {
-        /* playback_t *ctx = (playback_t *)pDevice->pUserData; */
-        /* if (ctx->decoder.pUserData == NULL) */
-        ma_decoder *pDecoder = (ma_decoder *)pDevice->pUserData;
-        if (pDecoder == NULL)
-        {
-                return;
-        }
-
-        ma_data_source_read_pcm_frames(pDecoder, pOutput, frameCount, NULL);
-
-        (void)pInput;
+    ma_decoder *pDecoder = (ma_decoder *)pDevice->pUserData;
+    if (pDecoder == NULL)
+            return;
+    ma_uint64 FRAMES_READ = -1;
+    ma_data_source_read_pcm_frames(pDecoder, pOutput, frameCount, &FRAMES_READ);
+    if (FRAMES_READ == 0)
+        is_finished = true;
+    (void)pInput;
 }
 
-static ma_uint64 g_PlaybackPosition = 0;
-
-// Modify the function signature to include a boolean flag for pausing
-int play(char *filename, playback_t *ctx, music_table_t *ht)
+int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
 {
-    music_file_t *curr_file = hash_table_get(ht, filename);
     ma_device_config deviceConfig;
     ma_result result;
+    char *fullpath = join_path(dir, selected->filename, ht);
+    bool select_menu = false;
 
-    result = ma_decoder_init_file(filename, NULL, &ctx->decoder);
+    result = ma_decoder_init_file(fullpath, NULL, &ctx->decoder);
     if (result != MA_SUCCESS)
     {
         return -2;
@@ -67,36 +91,80 @@ int play(char *filename, playback_t *ctx, music_table_t *ht)
         return -4;
     }
 
-    printf("Press 's' to stop playback, 'p' or spacebar to pause/resume...\n");
+    printf("Playing from %s\n", ctx->device.playback.name);
+    printf("Press 's' to stop the program, 'p' or 'spacebar' to pause/resume...\n");
     ctx->is_playing = true;
     ctx->is_paused = false;
 
-    int ch;
-    while ((ch = getchar()) != EOF)
+    while (true)
     {
-        if (ch == 's')
+        if (is_finished)
         {
-            break;
-        }
-        else if (ch == 'p' || ch == ' ') // Toggle pause/resume when 'm' key is pressed
-        {
-            if (ctx->is_paused)
+            printf("Finally\n");
+            music_file_t *next = selected->snext;
+            if (next != NULL)
             {
-                if (ma_device_start(&ctx->device) != MA_SUCCESS)
-                    printf("Failed to resume audio\n");
-
-                ctx->is_paused = false;
-                printf("Audio resumed\n");
+                is_finished = false;
+                clearscreen();
+                print_player(next);
+                play(dir, next, ctx, ht);
             }
             else
             {
-                ma_device_stop(&ctx->device);
-                ctx->is_paused = true;
-                printf("Audio paused\n");
+                printf("Im full\n");
+                break;
+            }
+        }
+
+        if (kbhit())
+        {
+            char ch = getchar();
+            if (ch == 's')
+                break;
+            else if (ch == 'm')
+            {
+                select_menu = true;
+                break;
+            }
+            else if (ch == 'p' || ch == ' ')
+            {
+                if (ctx->is_paused)
+                {
+                    if (ma_device_start(&ctx->device) != MA_SUCCESS)
+                        printf("Failed to resume audio\n");
+
+                    ctx->is_paused = false;
+                }
+                else
+                {
+                    ma_device_stop(&ctx->device);
+                    ctx->is_paused = true;
+                }
+                printf("Audio %s\n", ctx->is_paused ? "paused" : "resumed");
             }
         }
     }
 
+    if (select_menu)
+    {
+        free(fullpath);
+
+        music_file_t *selectedmenu = select_music_file(ht);
+        if (selectedmenu != NULL)
+        {
+            ma_device_uninit(&ctx->device);
+            ma_decoder_uninit(&ctx->decoder);
+            fullpath = join_path(dir, selectedmenu->filename, ht);
+
+            clearscreen();
+            print_player(selectedmenu);
+            if (play(dir, selectedmenu, ctx, ht) != 0)
+                printf("Failed to play the selected file\n");
+            free(fullpath);
+        }
+    }
+
+    ctx->is_playing = false;
     ma_device_uninit(&ctx->device);
     ma_decoder_uninit(&ctx->decoder);
 

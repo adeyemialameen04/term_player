@@ -13,7 +13,7 @@ typedef struct playback_t
 } playback_t;
 
 void stop_playback(playback_t *ctx);
-int play(char *filename, playback_t *ctx, music_table_t *ht);
+int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht);
 void clearscreen(void);
 void playback_loop(music_table_t *ht, playback_t *ctx, char *fullpath);
 
