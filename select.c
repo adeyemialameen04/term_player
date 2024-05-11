@@ -26,10 +26,9 @@ void print_menu(music_table_t *ht, int *selected_option)
     while (tmp != NULL)
     {
         if (i == *selected_option)
-            printf("> ");
+            printf("\033[35m>\033[0m \033[32m%s\033[0m\n", tmp->filename);
         else
-            printf(" ");
-        printf("%s\n", tmp->filename);
+            printf(" \033[32m%s\033[0m\n", tmp->filename);
         tmp = tmp->snext;
         i++;
     }
@@ -50,6 +49,7 @@ music_file_t *select_music_file(music_table_t *ht)
     }
 
     disableCursor();
+    clearscreen();
     while (1)
     {
         clearscreen();
