@@ -62,6 +62,7 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
     ma_result result;
     char *fullpath = join_path(dir, selected->filename, ht);
     bool select_menu = false;
+    int direction = -1;
 
     result = ma_decoder_init_file(fullpath, NULL, &ctx->decoder);
     if (result != MA_SUCCESS)
@@ -92,7 +93,7 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
     }
 
     printf("Playing from %s\n", ctx->device.playback.name);
-    printf("Press 's' to stop the program, 'p' or 'spacebar' to pause/resume...\n");
+    printf("\033[32m(n)ext (p)rev (l)ibrary (p)ause (s)stop\n\033[0m");
     ctx->is_playing = true;
     ctx->is_paused = false;
 
@@ -121,9 +122,19 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
             char ch = getchar();
             if (ch == 's')
                 break;
-            else if (ch == 'm')
+            else if (ch == 'l')
             {
                 select_menu = true;
+                break;
+            }
+            else if (ch == 'n')
+            {
+                direction = 1;
+                break;
+            }
+            else if (ch == 'p')
+            {
+                direction = 0;
                 break;
             }
             else if (ch == 'p' || ch == ' ')
@@ -161,6 +172,41 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
             if (play(dir, selectedmenu, ctx, ht) != 0)
                 printf("Failed to play the selected file\n");
             free(fullpath);
+        }
+    }
+
+    if (direction == 1)
+    {
+        music_file_t *next = selected->snext;
+        if (next != NULL)
+        {
+            stop_playback(ctx);
+            is_finished = false;
+            clearscreen();
+            print_player(next);
+            play(dir, next, ctx, ht);
+        }
+        else
+        {
+            printf("Im full\n");
+            return (-1);
+        }
+    }
+    else if (direction == 0)
+    {
+        music_file_t *prev = selected->sprev;
+        if (prev != NULL)
+        {
+            stop_playback(ctx);
+            is_finished = false;
+            clearscreen();
+            print_player(prev);
+            play(dir, prev, ctx, ht);
+        }
+        else
+        {
+            printf("Im full\n");
+            return (-1);
         }
     }
 
