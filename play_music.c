@@ -10,11 +10,6 @@
 #include <sys/ioctl.h>
 
 bool is_finished = false;
-void clearInputBuffer()
-{
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
 
 void stop_playback(playback_t *ctx)
 {
@@ -96,7 +91,7 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
 
     disableCursor();
     printf("Playing from %s\n", ctx->device.playback.name);
-    printf("\033[32m(n)ext (p)rev (l)ibrary (p)ause (s)stop\n\033[0m");
+    printf("\033[32m(n)ext (p)rev (l)ibrary (s)pacebar`pause` (s)stop\n\033[0m");
     ctx->is_playing = true;
     ctx->is_paused = false;
 
@@ -140,7 +135,7 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
                 direction = 0;
                 break;
             }
-            else if (ch == 'p' || ch == ' ')
+            else if (ch == ' ')
             {
                 if (ctx->is_paused)
                 {

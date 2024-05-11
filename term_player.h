@@ -27,21 +27,30 @@ typedef struct music_table
   music_file_t *tail;
 } music_table_t;
 
-char *join_path(char *dir, char *filename, music_table_t *ht);
+/* HASHTABLE */
 music_table_t *create_ht(unsigned int size);
 void print_dll(music_table_t *ht);
+music_file_t *hash_table_get(music_table_t *ht, char *key);
 void build_dll(music_table_t *ht);
-int is_music(const char *filename);
 int insert(music_table_t *ht, char *filename);
-int get_music_files(char *filename, char *path);
 unsigned long int hash_djb2(const unsigned char *str);
 unsigned long int key_index(const unsigned char *key, unsigned long int size);
 void free_ht(music_table_t *ht);
-music_file_t *hash_table_get(music_table_t *ht, char *key);
+/* HASHTABLE END */
+
+/* MUSIC */
 music_file_t *select_music_file(music_table_t *ht);
+int is_music(const char *filename);
+int get_music_files(char *filename, char *path);
+/* MUSIC END */
+
+/* UTILS */
 void clearscreen(void);
-void print_player(music_file_t *selected);
 void disableCursor(void);
 void enableCursor(void);
+void print_author(void);
+char *join_path(char *dir, char *filename, music_table_t *ht);
+void print_player(music_file_t *selected);
+/* UTILS END */
 
 #endif /* _TERM_PLAYER_H_ */
