@@ -41,5 +41,7 @@ music_file_t *hash_table_get(music_table_t *ht, char *key);
 music_file_t *select_music_file(music_table_t *ht);
 void clearscreen(void);
 void print_player(music_file_t *selected);
+void disableCursor(void);
+void enableCursor(void);
 
 #endif /* _TERM_PLAYER_H_ */

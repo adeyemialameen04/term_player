@@ -49,8 +49,10 @@ music_file_t *select_music_file(music_table_t *ht)
         tmp = tmp->snext;
     }
 
+    disableCursor();
     while (1)
     {
+        clearscreen();
         printf("\033[2J\033[H");
         print_menu(ht, &selected_option);
         char ch = getchar();
@@ -99,6 +101,7 @@ music_file_t *select_music_file(music_table_t *ht)
             return selected;
         }
     }
+    enableCursor();
 
     return NULL;
 }

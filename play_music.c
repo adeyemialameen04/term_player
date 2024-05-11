@@ -23,6 +23,8 @@ void stop_playback(playback_t *ctx)
             ma_device_stop(&ctx->device);
             ma_device_uninit(&ctx->device);
             ma_decoder_uninit(&ctx->decoder);
+            ctx->decoder = (ma_decoder){0};
+            ctx->device = (ma_device){0};
             ctx->is_playing = false;
     }
 }
@@ -92,6 +94,7 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
         return -4;
     }
 
+    disableCursor();
     printf("Playing from %s\n", ctx->device.playback.name);
     printf("\033[32m(n)ext (p)rev (l)ibrary (p)ause (s)stop\n\033[0m");
     ctx->is_playing = true;
@@ -156,6 +159,7 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
         }
     }
 
+    enableCursor();
     if (select_menu)
     {
         free(fullpath);
@@ -211,8 +215,7 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
     }
 
     ctx->is_playing = false;
-    ma_device_uninit(&ctx->device);
-    ma_decoder_uninit(&ctx->decoder);
+    stop_playback(ctx);
 
     return 0;
 }
