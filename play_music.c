@@ -1,11 +1,8 @@
+#define MINIAUDIO_IMPLEMENTATION
+#include "audio.h"
 #include "term_player.h"
-#include <stdbool.h>
-#include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
-#define MINIAUDIO_IMPLEMENTATION
-#include <stdio.h>
-#include "audio.h"
 #include <termios.h>
 #include <sys/ioctl.h>
 
@@ -91,7 +88,7 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
 
     disableCursor();
     printf("Playing from %s\n", ctx->device.playback.name);
-    printf("\033[32m(n)ext (p)rev (l)ibrary (s)pacebar`pause` (s)stop\n\033[0m");
+    printf("\033[32m(n)ext (p)rev (l)ibrary (s)pacebar`pause` (s)earch (q)uit\n\033[0m");
     ctx->is_playing = true;
     ctx->is_paused = false;
 
@@ -118,7 +115,7 @@ int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
         if (kbhit())
         {
             char ch = getchar();
-            if (ch == 's')
+            if (ch == 'q')
                 break;
             else if (ch == 'l')
             {
