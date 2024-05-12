@@ -4,43 +4,46 @@
 #include <string.h>
 #include <stdlib.h>
 
+/**
+ * main - Entry to the program.
+ * @argc: Args count.
+ * @argv: An array of strings to the arguments.
+ * Return: 0 on success 1 on failure.
+ */
 int main(int argc, char *argv[])
 {
-    music_table_t *ht;
-    music_file_t *selected;
-    int size;
-    char *fullpath = NULL;
-    playback_t ctx = {0};
+	music_table_t *ht;
+	music_file_t *selected;
+	int size;
+	char *fullpath = NULL;
+	playback_t ctx = {0};
 
-    print_author();
+	print_author();
 
-    if (argc < 2)
-        size = get_music_files("musics.txt", ".");
-    else
-        size = get_music_files("musics.txt", argv[1]);
+	if (argc < 2)
+		size = get_music_files("musics.txt", ".");
+	else
+		size = get_music_files("musics.txt", argv[1]);
 
-    ht = create_ht(size);
-    if (argv[1] != NULL)
-        ht->directory = strdup(argv[1]);
-    build_dll(ht);
+	ht = create_ht(size);
+	if (argv[1] != NULL)
+		ht->directory = strdup(argv[1]);
+	build_dll(ht);
 
-    selected = select_music_file(ht);
-    if (selected != NULL)
-    {
-        printf("Getting here\n");
-        fullpath = join_path(argv[1], selected->filename, ht);
+	selected = select_music(ht);
+	if (selected != NULL)
+	{
+		fullpath = join_path(argv[1], selected->filename, ht);
+		clearscreen();
 
-        clearscreen();
-        int ch;
-        print_player(selected);
-        if (play(argv[1], selected, &ctx, ht) != 0)
-            printf("Failed to play the selected file\n");
+		print_player(selected);
+		if (play(selected, &ctx, ht) != 0)
+			printf("Failed to play the selected file\n");
 
-        free(fullpath);
-    }
+		free(fullpath);
+	}
 
-    free_ht(ht);
+	free_ht(ht);
 
-    return 0;
+	return (0);
 }
-

@@ -3,6 +3,12 @@
 #include <string.h>
 #include <sys/stat.h>
 
+/**
+ * create_node - Creates a node to be inserted.
+ * @filename: The thing to be inserted.
+ * @directory_path: The path of the file.
+ * Return: A single node.
+ */
 static music_file_t *create_node(char *filename, char *directory_path)
 {
 	music_file_t *new_node = malloc(sizeof(music_file_t));
@@ -65,6 +71,13 @@ static music_file_t *create_node(char *filename, char *directory_path)
 	return (new_node);
 }
 
+/**
+ * insert - Inserts an elemnt into the hashtable.
+ * @ht: The hashtable to be inserted into.
+ * @filename: The filename to be inserted.
+ * Return: 1 on success 0 on failure.
+ */
+int insert(music_table_t *ht, char *filename);
 int insert(music_table_t *ht, char *filename)
 {
 	unsigned long int idx;

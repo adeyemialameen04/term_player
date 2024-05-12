@@ -7,208 +7,152 @@
 
 bool is_finished = false;
 
+/**
+ * stop_playback - Stops current playback.
+ * @ctx: The playback struct.
+ */
 void stop_playback(playback_t *ctx)
 {
-    if (ctx->is_playing)
-    {
-        ma_device_stop(&ctx->device);
-        ma_device_uninit(&ctx->device);
-        ma_decoder_uninit(&ctx->decoder);
-        ctx->decoder = (ma_decoder){0};
-        ctx->device = (ma_device){0};
-        ctx->is_playing = false;
-    }
+	if (ctx->is_playing)
+	{
+		ma_device_stop(&ctx->device);
+		ma_device_uninit(&ctx->device);
+		ma_decoder_uninit(&ctx->decoder);
+		ctx->decoder = (ma_decoder){0};
+		ctx->device = (ma_device){0};
+		ctx->is_playing = false;
+	}
 }
 
-
-void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount)
+/**
+ * data_callback - Would be called while frames are being read.
+ * @pDevice: The device its playing from.
+ * @pOutput: The output its playing to.
+ * @pInput: The input its playing from.
+ * @frameCount: The framecount.
+ */
+void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
+				   ma_uint32 frameCount)
 {
-    ma_decoder *pDecoder = (ma_decoder *)pDevice->pUserData;
-    if (pDecoder == NULL)
-            return;
-    ma_uint64 FRAMES_READ = -1;
-    ma_data_source_read_pcm_frames(pDecoder, pOutput, frameCount, &FRAMES_READ);
-    if (FRAMES_READ == 0)
-        is_finished = true;
-    (void)pInput;
+	ma_decoder *pDecoder = (ma_decoder *)pDevice->pUserData;
+	ma_uint64 FRAMES_READ = -1;
+
+	if (pDecoder == NULL)
+		return;
+
+	ma_data_source_read_pcm_frames(pDecoder, pOutput, frameCount, &FRAMES_READ);
+
+	if (FRAMES_READ == 0)
+		is_finished = true;
+	(void)pInput;
 }
 
-int handleNextAndPrev(int direction, music_file_t *selected, playback_t *ctx, char *dir, music_table_t *ht)
+void cmd_loop(music_file_t *selected, music_table_t *ht, playback_t *ctx,
+			  bool *select_menu, int *direction)
 {
-    if (direction == 1)
-    {
-        music_file_t *next = selected->snext;
-        if (next != NULL)
-        {
-            stop_playback(ctx);
-            is_finished = false;
-            clearscreen();
-            print_player(next);
-            play(dir, next, ctx, ht);
-        }
-        else
-        {
-            printf("Im full\n");
-            return (-1);
-        }
-    }
-    else if (direction == 0)
-    {
-        music_file_t *prev = selected->sprev;
-        if (prev != NULL)
-        {
-            stop_playback(ctx);
-            is_finished = false;
-            clearscreen();
-            print_player(prev);
-            play(dir, prev, ctx, ht);
-        }
-        else
-        {
-            printf("Im full\n");
-            return (-1);
-        }
-    }
+	while (true)
+	{
+		ctx->is_finished = is_finished;
+		handle_auto_next(ctx, ht, selected, &is_finished);
 
-    return (0);
+		if (kbhit())
+		{
+			char ch = getchar();
+
+			if (ch == 'q')
+				break;
+			else if (ch == 'l')
+			{
+				*select_menu = true;
+				break;
+			}
+			else if (ch == 'n')
+			{
+				*direction = 1;
+				break;
+			}
+			else if (ch == 'p')
+			{
+				*direction = 0;
+				break;
+			}
+			else if (ch == ' ')
+			{
+				if (ctx->is_paused)
+				{
+					if (ma_device_start(&ctx->device) != MA_SUCCESS)
+						printf("Failed to resume audio\n");
+
+					ctx->is_paused = false;
+				}
+				else
+				{
+					ma_device_stop(&ctx->device);
+					ctx->is_paused = true;
+				}
+				printf_colour(32, "Audio %s\n", ctx->is_paused ? "paused" : "resumed");
+			}
+		}
+	}
 }
 
-void handleSelectMenu(bool select_menu, char *fullpath, char *dir, music_table_t *ht, playback_t *ctx)
+/**
+ * play - Plays the music and handles the commands.
+ * @selected: The currently selcted music.
+ * @ctx: The playback context.
+ * @ht: The hashtable.
+ * Return: int.
+ */
+int play(music_file_t *selected, playback_t *ctx, music_table_t *ht)
 {
-    if (select_menu)
-    {
-        free(fullpath);
+	ma_device_config deviceConfig;
+	ma_result result;
+	char *fullpath = join_path(ht->directory, selected->filename, ht);
+	bool select_menu = false;
+	int direction = -1;
 
-        music_file_t *selectedmenu = select_music_file(ht);
-        if (selectedmenu != NULL)
-        {
-            ma_device_uninit(&ctx->device);
-            ma_decoder_uninit(&ctx->decoder);
-            fullpath = join_path(dir, selectedmenu->filename, ht);
+	result = ma_decoder_init_file(fullpath, NULL, &ctx->decoder);
+	if (result != MA_SUCCESS)
+	{
+		return (-2);
+	}
 
-            clearscreen();
-            print_player(selectedmenu);
-            if (play(dir, selectedmenu, ctx, ht) != 0)
-                printf("Failed to play the selected file\n");
-            free(fullpath);
-        }
-    }
-}
+	deviceConfig = ma_device_config_init(ma_device_type_playback);
+	deviceConfig.playback.format = ctx->decoder.outputFormat;
+	deviceConfig.playback.channels = ctx->decoder.outputChannels;
+	deviceConfig.sampleRate = ctx->decoder.outputSampleRate;
+	deviceConfig.dataCallback = data_callback;
+	deviceConfig.pUserData = &ctx->decoder;
 
-void cmd_loop(music_file_t *selected, music_table_t *ht, playback_t *ctx, char *dir, bool *select_menu, int *direction)
-{
-    while (true)
-    {
-        if (is_finished)
-        {
-            printf("Finally\n");
-            music_file_t *next = selected->snext;
-            if (next != NULL)
-            {
-                is_finished = false;
-                clearscreen();
-                print_player(next);
-                play(dir, next, ctx, ht);
-            }
-            else
-            {
-                printf("Im full\n");
-                break;
-            }
-        }
+	if (ma_device_init(NULL, &deviceConfig, &ctx->device) != MA_SUCCESS)
+	{
+		printf("Failed to open playback device.\n");
+		ma_decoder_uninit(&ctx->decoder);
+		return (-3);
+	}
 
-        if (kbhit())
-        {
-            char ch = getchar();
-            if (ch == 'q')
-                break;
-            else if (ch == 'l')
-            {
-                *select_menu = true;
-                break;
-            }
-            else if (ch == 'n')
-            {
-                *direction = 1;
-                break;
-            }
-            else if (ch == 'p')
-            {
-                *direction = 0;
-                break;
-            }
-            else if (ch == ' ')
-            {
-                if (ctx->is_paused)
-                {
-                    if (ma_device_start(&ctx->device) != MA_SUCCESS)
-                        printf("Failed to resume audio\n");
+	if (ma_device_start(&ctx->device) != MA_SUCCESS)
+	{
+		printf("Failed to start playback device.\n");
+		ma_device_uninit(&ctx->device);
+		ma_decoder_uninit(&ctx->decoder);
+		return (-4);
+	}
 
-                    ctx->is_paused = false;
-                }
-                else
-                {
-                    ma_device_stop(&ctx->device);
-                    ctx->is_paused = true;
-                }
-                printf("Audio %s\n", ctx->is_paused ? "paused" : "resumed");
-            }
-        }
-    }
-}
+	disableCursor();
+	printf("Playing from %s\n", ctx->device.playback.name);
+	printf_colour(32, "(n)ext (p)rev (l)ibrary (s)pacebar`pause` (s)earch (q)uit\n");
+	ctx->is_playing = true;
+	ctx->is_paused = false;
 
-int play(char *dir, music_file_t *selected, playback_t *ctx, music_table_t *ht)
-{
-    ma_device_config deviceConfig;
-    ma_result result;
-    char *fullpath = join_path(dir, selected->filename, ht);
-    bool select_menu = false;
-    int direction = -1;
+	cmd_loop(selected, ht, ctx, &select_menu, &direction);
+	enableCursor();
 
-    result = ma_decoder_init_file(fullpath, NULL, &ctx->decoder);
-    if (result != MA_SUCCESS)
-    {
-        return -2;
-    }
+	handle_select_menu(select_menu, fullpath, ht, ctx);
+	handle_next_and_prev(direction, selected, ctx, ht);
 
-    deviceConfig = ma_device_config_init(ma_device_type_playback);
-    deviceConfig.playback.format = ctx->decoder.outputFormat;
-    deviceConfig.playback.channels = ctx->decoder.outputChannels;
-    deviceConfig.sampleRate = ctx->decoder.outputSampleRate;
-    deviceConfig.dataCallback = data_callback;
-    deviceConfig.pUserData = &ctx->decoder;
+	ctx->is_playing = false;
+	stop_playback(ctx);
 
-    if (ma_device_init(NULL, &deviceConfig, &ctx->device) != MA_SUCCESS)
-    {
-        printf("Failed to open playback device.\n");
-        ma_decoder_uninit(&ctx->decoder);
-        return -3;
-    }
-
-    if (ma_device_start(&ctx->device) != MA_SUCCESS)
-    {
-        printf("Failed to start playback device.\n");
-        ma_device_uninit(&ctx->device);
-        ma_decoder_uninit(&ctx->decoder);
-        return -4;
-    }
-
-    disableCursor();
-    printf("Playing from %s\n", ctx->device.playback.name);
-    printf("\033[32m(n)ext (p)rev (l)ibrary (s)pacebar`pause` (s)earch (q)uit\n\033[0m");
-    ctx->is_playing = true;
-    ctx->is_paused = false;
-
-
-    cmd_loop(selected, ht, ctx, dir, &select_menu, &direction);
-    enableCursor();
-
-    handleSelectMenu(select_menu, fullpath, dir, ht, ctx);
-    handleNextAndPrev(direction, selected, ctx, dir, ht);
-
-
-    ctx->is_playing = false;
-    stop_playback(ctx);
-
-    return 0;
+	return (0);
 }

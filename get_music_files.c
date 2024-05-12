@@ -1,19 +1,13 @@
 #include "term_player.h"
 #include <stdio.h>
 
-int is_music(const char *filename)
-{
-	const char *ext = strrchr(filename, '.');
-
-	if (ext != NULL)
-	{
-		if (strcmp(ext, ".mp3") == 0 || strcmp(ext, ".wav") == 0)
-			return (1);
-	}
-
-	return (0);
-}
-
+/**
+ * get_music_files - Gets music files and read them into a txt file.
+ * @filename: The filename to read into.
+ * @path: The path of the files.
+ * Return: the amount of music files gotten.
+ */
+int get_music_files(char *filename, char *path);
 int get_music_files(char *filename, char *path)
 {
 	DIR *dir;
@@ -48,8 +42,10 @@ int get_music_files(char *filename, char *path)
 
 	if (count == 0)
 	{
-		printf("No music files detected\n");
-		printf("Add music files to the current directory to use term_player\n");
+
+		printf_colour(31, "No music files detected\n");
+		printf_colour(31, "Add music files to the current "
+						  "directory to use term_player\n");
 		closedir(dir);
 		fclose(fd);
 		exit(EXIT_FAILURE);

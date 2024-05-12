@@ -2,6 +2,8 @@
 	"files.associations": {
 		"miniaudio.h": "c",
 		"term_player.h": "c",
-		"dirent.h": "c"
+		"dirent.h": "c",
+		"stdlib.h": "c",
+		"stdio.h": "c"
 	}
 }
