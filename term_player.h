@@ -50,6 +50,7 @@ void disableCursor(void);
 void enableCursor(void);
 void print_author(void);
 char *join_path(char *dir, char *filename, music_table_t *ht);
+bool kbhit(void);
 void print_player(music_file_t *selected);
 /* UTILS END */
 

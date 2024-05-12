@@ -1,7 +1,6 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include "audio.h"
 #include "term_player.h"
-#include <sys/types.h>
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>
@@ -12,31 +11,15 @@ void stop_playback(playback_t *ctx)
 {
     if (ctx->is_playing)
     {
-            ma_device_stop(&ctx->device);
-            ma_device_uninit(&ctx->device);
-            ma_decoder_uninit(&ctx->decoder);
-            ctx->decoder = (ma_decoder){0};
-            ctx->device = (ma_device){0};
-            ctx->is_playing = false;
+        ma_device_stop(&ctx->device);
+        ma_device_uninit(&ctx->device);
+        ma_decoder_uninit(&ctx->decoder);
+        ctx->decoder = (ma_decoder){0};
+        ctx->device = (ma_device){0};
+        ctx->is_playing = false;
     }
 }
 
-bool kbhit() 
-{ 
-    struct termios term; 
-    tcgetattr(0, &term); 
- 
-    struct termios term2 = term; 
-    term2.c_lflag &= ~ICANON; 
-    tcsetattr(0, TCSANOW, &term2); 
- 
-    int byteswaiting; 
-    ioctl(0, FIONREAD, &byteswaiting); 
- 
-    tcsetattr(0, TCSANOW, &term); 
- 
-    return byteswaiting > 0; 
-}
 
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount)
 {
