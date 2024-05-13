@@ -9,7 +9,7 @@ This is a simple terminal based music player created with C, capable of laying m
 - Quit the player anytime
 
 ## Getting Started
-To build and run the simple shell, follow these steps:
+To build and run the music player, follow these steps:
 ```bash
 git clone https://github.com/adeyemialameen04/term_player.git
 ```
@@ -24,16 +24,16 @@ gcc -g -o term_player *.c -lm
 
 ## Usage
 To create the library from the current directory run the executable with no arguments.
-```bash
+```
 ./term_payer
 ```
 
 To specify a directory
-```bash
+```
 ./term_player name_of_directory
 ```
 There are some test musics in the `musics` directory
-```bash
+```
 ./term_player musics
 ```
 
