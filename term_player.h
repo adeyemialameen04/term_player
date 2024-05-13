@@ -45,7 +45,7 @@ typedef struct music_table
 
 /* HASHTABLE */
 music_table_t *create_ht(unsigned int size);
-void print_dll(music_table_t *ht);
+void print_ht(music_table_t *ht);
 music_file_t *hash_table_get(music_table_t *ht, char *key);
 void build_dll(music_table_t *ht);
 int insert(music_table_t *ht, char *filename);

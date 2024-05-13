@@ -5,6 +5,7 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 
+void stop_playback(playback_t *ctx);
 bool is_finished = false;
 
 /**
@@ -47,51 +48,81 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
 	(void)pInput;
 }
 
-void cmd_loop(music_file_t *selected, music_table_t *ht, playback_t *ctx,
-			  bool *select_menu, int *direction)
+/**
+ * handle_pause - Handles pausing of the music.
+ * @ctx: Playback context.
+ */
+void handle_pause(playback_t *ctx)
+{
+	if (ctx->is_paused)
+	{
+		if (ma_device_start(&ctx->device) != MA_SUCCESS)
+			printf("Failed to resume audio\n");
+
+		ctx->is_paused = false;
+	}
+	else
+	{
+		ma_device_stop(&ctx->device);
+		ctx->is_paused = true;
+	}
+	printf_colour(32, "Audio %s\n", ctx->is_paused ? "paused" : "resumed");
+}
+
+/**
+ * process_input - Processes the user input to handle different commands.
+ * @ch: The command the user enters.
+ * @select_menu: Boolean to check if the user wants to select again.
+ * @direction: Boolean to check if the user wants to go prev or next.
+ * @ctx: Playback context.
+ * @selected: The currently playing selected music.
+ * @ht: The hashtable.
+ * @fullpath: The fullpath to the currently playing one.
+ */
+void process_input(char ch, bool *select_menu, int *direction,
+				   playback_t *ctx, music_file_t *selected,
+				   music_table_t *ht, char *fullpath)
+{
+	switch (ch)
+	{
+	case 'q':
+		stop_playback(ctx);
+		free(ht);
+		exit(EXIT_SUCCESS);
+	case 'l':
+		*select_menu = true;
+		handle_select_menu(select_menu, fullpath, ht, ctx);
+		return;
+	case 'n':
+		*direction = 1;
+		handle_next_and_prev(*direction, selected, ctx, ht);
+		return;
+	case 'p':
+		*direction = 0;
+		handle_next_and_prev(*direction, selected, ctx, ht);
+		return;
+	case ' ':
+		handle_pause(ctx);
+		return;
+	default:
+		printf_colour(31, "Invalid command\n");
+		return;
+	}
+}
+
+void cmd_loop(music_file_t *selected,
+			  music_table_t *ht, playback_t *ctx, bool *select_menu,
+			  int *direction, char *fullpath)
 {
 	while (true)
 	{
 		ctx->is_finished = is_finished;
 		handle_auto_next(ctx, ht, selected, &is_finished);
-
 		if (kbhit())
 		{
 			char ch = getchar();
 
-			if (ch == 'q')
-				break;
-			else if (ch == 'l')
-			{
-				*select_menu = true;
-				break;
-			}
-			else if (ch == 'n')
-			{
-				*direction = 1;
-				break;
-			}
-			else if (ch == 'p')
-			{
-				*direction = 0;
-				break;
-			}
-			else if (ch == ' ')
-			{
-				if (ctx->is_paused)
-				{
-					if (ma_device_start(&ctx->device) != MA_SUCCESS)
-						printf("Failed to resume audio\n");
-
-					ctx->is_paused = false;
-				}
-				else
-				{
-					ma_device_stop(&ctx->device);
-					ctx->is_paused = true;
-				}
-				printf_colour(32, "Audio %s\n", ctx->is_paused ? "paused" : "resumed");
-			}
+			process_input(ch, select_menu, direction, ctx, selected, ht, fullpath);
 		}
 	}
 }
@@ -103,6 +134,7 @@ void cmd_loop(music_file_t *selected, music_table_t *ht, playback_t *ctx,
  * @ht: The hashtable.
  * Return: int.
  */
+int play(music_file_t *selected, playback_t *ctx, music_table_t *ht);
 int play(music_file_t *selected, playback_t *ctx, music_table_t *ht)
 {
 	ma_device_config deviceConfig;
@@ -141,15 +173,13 @@ int play(music_file_t *selected, playback_t *ctx, music_table_t *ht)
 
 	disableCursor();
 	printf("Playing from %s\n", ctx->device.playback.name);
-	printf_colour(32, "(n)ext (p)rev (l)ibrary (s)pacebar`pause` (s)earch (q)uit\n");
+	printf_colour(32, "(n)ext (p)rev (l)ibrary");
+	printf_colour(32, " (s)pacebar`pause` (s)earch (q)uit\n");
 	ctx->is_playing = true;
 	ctx->is_paused = false;
 
-	cmd_loop(selected, ht, ctx, &select_menu, &direction);
+	cmd_loop(selected, ht, ctx, &select_menu, &direction, fullpath);
 	enableCursor();
-
-	handle_select_menu(select_menu, fullpath, ht, ctx);
-	handle_next_and_prev(direction, selected, ctx, ht);
 
 	ctx->is_playing = false;
 	stop_playback(ctx);

@@ -9,6 +9,7 @@
  * @directory_path: The path of the file.
  * Return: A single node.
  */
+static music_file_t *create_node(char *filename, char *directory_path);
 static music_file_t *create_node(char *filename, char *directory_path)
 {
 	music_file_t *new_node = malloc(sizeof(music_file_t));

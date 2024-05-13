@@ -4,6 +4,7 @@
 		"term_player.h": "c",
 		"dirent.h": "c",
 		"stdlib.h": "c",
-		"stdio.h": "c"
+		"stdio.h": "c",
+		"ioctl.h": "c"
 	}
 }

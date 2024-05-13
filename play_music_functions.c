@@ -27,7 +27,8 @@ int handle_next_and_prev(int direction, music_file_t *selected,
 		else
 		{
 			printf_colour(31, "There is no next exiting now...\n");
-			return (-1);
+			stop_playback(ctx);
+			exit(EXIT_SUCCESS);
 		}
 	}
 	else if (direction == 0)
@@ -45,7 +46,8 @@ int handle_next_and_prev(int direction, music_file_t *selected,
 		else
 		{
 			printf_colour(31, "There is no prev exiting now...\n");
-			return (-1);
+			stop_playback(ctx);
+			exit(EXIT_SUCCESS);
 		}
 	}
 
