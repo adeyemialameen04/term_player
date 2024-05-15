@@ -15,7 +15,7 @@ git clone https://github.com/adeyemialameen04/term_player.git
 ```
 
 ```bash
-cd term_player
+cd term_player/src
 ```
 
 ```
@@ -31,10 +31,6 @@ To create the library from the current directory run the executable with no argu
 To specify a directory
 ```
 ./term_player path_to_directory
-```
-There are some test musics in the `musics` directory
-```
-./term_player ../musics
 ```
 
 ## Contributing
@@ -52,7 +48,7 @@ Push to the branch (git push origin feature/your_feature_name).
 
 Create a new pull request.
 
-### You can do anything u want with this project but dont change the name of the AUTHOR
+#### You can do anything u want with this project but dont change the name of the AUTHOR
 
 ## THANKS (⊃｡•́‿•̀｡)⊃
 Thanks to [David Reid](https://github.com/mackron) for making his audio playback library [(miniaudio)](https://github.com/mackron/miniaudio) available -- this project would not be possible without it.
