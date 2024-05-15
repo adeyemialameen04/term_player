@@ -1,5 +1,5 @@
 # Term Player
-This is a simple terminal based music player created with C, capable of laying musics right from your terminal.
+This is a simple terminal based music player created with C, capable of playing musics right from your terminal.
 
 ## Features
 - Play music files from your terminal
@@ -30,11 +30,11 @@ To create the library from the current directory run the executable with no argu
 
 To specify a directory
 ```
-./term_player name_of_directory
+./term_player path_to_directory
 ```
 There are some test musics in the `musics` directory
 ```
-./term_player musics
+./term_player ../musics
 ```
 
 ## Contributing
