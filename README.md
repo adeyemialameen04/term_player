@@ -38,13 +38,13 @@ Contributions are welcome! If you would like to contribute to the development of
 
 Fork the repository.
 
-Create a new branch (git checkout -b feature/your_feature_name).
+Create a new branch `git checkout -b feature/your_feature_name`.
 
 Make your changes.
 
-Commit your changes (git commit -am 'Add new feature').
+Commit your changes `git commit -am 'Add new feature'`.
 
-Push to the branch (git push origin feature/your_feature_name).
+Push to the branch `git push origin feature/your_feature_name`.
 
 Create a new pull request.
 
